@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "app/(tabs)"
+		},
+		{
+			"path": "assets/badges"
+		}
+	],
+	"settings": {}
+}

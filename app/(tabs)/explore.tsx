@@ -1,109 +1,96 @@
-import { StyleSheet, Image, Platform } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
+import Animated, { FadeInUp } from 'react-native-reanimated';
+import { Ionicons } from '@expo/vector-icons';
 
-import { Collapsible } from '@/components/Collapsible';
-import { ExternalLink } from '@/components/ExternalLink';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { IconSymbol } from '@/components/ui/IconSymbol';
+export default function Explore() {
+  const router = useRouter();
 
-export default function TabTwoScreen() {
+  const exploreItems = [
+    {
+      title: 'New Habit Ideas',
+      description: 'Explore curated routines to boost productivity, health, and mindfulness.',
+      icon: 'bulb-outline',
+      action: () => router.push('/habit-tracker')
+    },
+    {
+      title: 'Weekly Challenge',
+      description: 'Join this week’s challenge: 10,000 steps a day. Track your streak!',
+      icon: 'flame-outline',
+      action: () => alert('Challenge coming soon!')
+    },
+    {
+      title: 'Unlock Achievements',
+      description: 'View your progress and earn badges for consistency.',
+      icon: 'trophy-outline',
+      action: () => router.push('/rewards')
+    },
+    {
+      title: 'Guided Priming',
+      description: 'Try a new 3-minute breathing session with motivational voiceovers.',
+      icon: 'medkit-outline',
+      action: () => router.push('/daily-priming')
+    }
+  ];
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Explore</ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image source={require('@/assets/images/react-logo.png')} style={{ alignSelf: 'center' }} />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Custom fonts">
-        <ThemedText>
-          Open <ThemedText type="defaultSemiBold">app/_layout.tsx</ThemedText> to see how to load{' '}
-          <ThemedText style={{ fontFamily: 'SpaceMono' }}>
-            custom fonts such as this one.
-          </ThemedText>
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/versions/latest/sdk/font">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user's current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful <ThemedText type="defaultSemiBold">react-native-reanimated</ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.header}>🌌 Welcome to Explore</Text>
+      <Text style={styles.sub}>Discover new features, challenges, and routines.</Text>
+
+      {exploreItems.map((item, index) => (
+        <Animated.View key={index} entering={FadeInUp.delay(index * 100)} style={styles.card}>
+          <TouchableOpacity onPress={item.action}>
+            <View style={styles.cardRow}>
+              <Ionicons name={item.icon} size={28} color="#00ffe0" style={{ marginRight: 15 }} />
+              <View>
+                <Text style={styles.cardTitle}>{item.title}</Text>
+                <Text style={styles.cardDescription}>{item.description}</Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+        </Animated.View>
+      ))}
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  container: {
+    padding: 20,
+    backgroundColor: '#0a0a0a',
+    flexGrow: 1
   },
-  titleContainer: {
+  header: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: '#00ffe0',
+    marginBottom: 10
+  },
+  sub: {
+    fontSize: 16,
+    color: '#aaa',
+    marginBottom: 30
+  },
+  card: {
+    backgroundColor: '#1e1e1e',
+    padding: 20,
+    borderRadius: 12,
+    marginBottom: 20
+  },
+  cardRow: {
     flexDirection: 'row',
-    gap: 8,
+    alignItems: 'center'
   },
+  cardTitle: {
+    color: '#00ffe0',
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 4
+  },
+  cardDescription: {
+    color: '#ccc',
+    fontSize: 14
+  }
 });

@@ -1,3 +1,4 @@
+// FULL MERGED VERSION — Audio Learning + all your features
 import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, FlatList, Alert, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -7,7 +8,7 @@ import { Calendar } from 'react-native-calendars';
 import { Audio } from 'expo-av';
 import { fetchUserData, saveUserData } from './sync';
 
-const presetHabits = ['Drink Water', 'Meditate', 'Stretch'];
+const presetHabits = ['Drink Water', 'Meditate', 'Stretch', '🎧 Audio Learning (1h)'];
 
 export default function HabitTracker() {
   const [habits, setHabits] = useState<string[]>([]);
@@ -19,7 +20,6 @@ export default function HabitTracker() {
   const [selectedDate, setSelectedDate] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
-
   const todayKey = new Date().toISOString().split('T')[0];
 
   useEffect(() => {
@@ -90,6 +90,7 @@ export default function HabitTracker() {
 
     if (newCompleted[habit]) {
       newStreaks[habit] = (newStreaks[habit] || 0) + 1;
+
       if (newStreaks[habit] === 1) unlockBadge('first_time');
       if (newStreaks[habit] === 3) { unlockBadge('stick_streak'); speak('Good job!'); }
       if (newStreaks[habit] === 7) { unlockBadge('weekly_champion'); speak('You’re a weekly champion!'); }

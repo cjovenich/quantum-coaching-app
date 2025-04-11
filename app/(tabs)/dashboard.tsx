@@ -12,6 +12,7 @@ export default function Dashboard() {
     focus: 0,
     consistency: 0,
   });
+  const [audioSeconds, setAudioSeconds] = useState(0);
 
   const mindHabits = ['Meditate', 'Journal', 'Read'];
   const bodyHabits = ['Drink Water', 'Stretch', 'Walk'];
@@ -21,9 +22,18 @@ export default function Dashboard() {
     const loadData = async () => {
       const streaks = await AsyncStorage.getItem('habit_streaks');
       const calendar = await AsyncStorage.getItem('calendar_log');
+      const audio = await AsyncStorage.getItem('audio_learning_log');
+      const today = new Date().toISOString().split('T')[0];
+
       setHabitStreaks(streaks ? JSON.parse(streaks) : {});
       setCalendarData(calendar ? JSON.parse(calendar) : {});
+
+      if (audio) {
+        const parsed = JSON.parse(audio);
+        setAudioSeconds(parsed[today] || 0);
+      }
     };
+
     loadData();
   }, []);
 
@@ -52,6 +62,14 @@ export default function Dashboard() {
     { label: 'Consistency', value: progress.consistency, color: '#00c853' }
   ];
 
+  const audioPercent = Math.min((audioSeconds / 3600) * 100, 100); // goal = 1h
+
+  const formatTime = (sec: number) => {
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    return `${h > 0 ? `${h}h ` : ''}${m}m`;
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.header}>📊 Quantum Dashboard</Text>
@@ -76,6 +94,25 @@ export default function Dashboard() {
             />
           </View>
         ))}
+
+        {/* 🎧 Audio Learning Ring */}
+        <View style={styles.ringContainer}>
+          <CircularProgress
+            value={Math.round(audioPercent)}
+            radius={60}
+            duration={1000}
+            activeStrokeColor="#00bcd4"
+            inActiveStrokeColor="#1e1e1e"
+            inActiveStrokeWidth={10}
+            activeStrokeWidth={12}
+            title="Audio Learning"
+            titleColor="#ccc"
+            titleStyle={{ fontWeight: 'bold', fontSize: 14 }}
+            valueSuffix="%"
+            progressValueColor="#fff"
+          />
+          <Text style={styles.audioTime}>{formatTime(audioSeconds)} today</Text>
+        </View>
       </View>
     </ScrollView>
   );
@@ -107,5 +144,10 @@ const styles = StyleSheet.create({
     width: '48%',
     marginBottom: 20,
     alignItems: 'center'
+  },
+  audioTime: {
+    color: '#aaa',
+    fontSize: 12,
+    marginTop: 8
   }
 });

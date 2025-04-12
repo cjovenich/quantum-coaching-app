@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Dimensions, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, Dimensions, StyleSheet, ScrollView, useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LineChart } from 'react-native-chart-kit';
 
@@ -16,6 +16,9 @@ export default function TrendGraphScreen() {
     ],
     legend: ['Mind', 'Body', 'Focus', 'Consistency'],
   });
+
+  const scheme = useColorScheme();
+  const isDark = scheme === 'dark';
 
   useEffect(() => {
     generateTrend();
@@ -37,12 +40,12 @@ export default function TrendGraphScreen() {
       const d = new Date(today);
       d.setDate(d.getDate() - i);
       const key = d.toISOString().split('T')[0];
-      labels.push(key.slice(5)); // show MM-DD
+      labels.push(key.slice(5)); // MM-DD
 
       const habitsToday = calendarLog[key] || [];
       const score = (group) => {
         const match = habitsToday.filter(h => group.includes(h)).length;
-        return match / group.length * 100;
+        return group.length ? (match / group.length) * 100 : 0;
       };
 
       mind.push(score(mindHabits));
@@ -64,23 +67,25 @@ export default function TrendGraphScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>📈 Progress Trend</Text>
-      <Text style={styles.subtitle}>Your last 7 days of consistency and growth</Text>
+    <ScrollView contentContainerStyle={[styles.container, { backgroundColor: isDark ? '#0a0a0a' : '#fff' }]}>
+      <Text style={[styles.title, { color: isDark ? '#00ffe0' : '#007acc' }]}>📈 Progress Trend</Text>
+      <Text style={[styles.subtitle, { color: isDark ? '#aaa' : '#666' }]}>
+        Your last 7 days of consistency and growth
+      </Text>
 
       <LineChart
         data={chartData}
         width={screenWidth - 30}
         height={280}
         chartConfig={{
-          backgroundGradientFrom: '#0a0a0a',
-          backgroundGradientTo: '#0a0a0a',
-          color: () => '#fff',
-          labelColor: () => '#aaa',
+          backgroundGradientFrom: isDark ? '#0a0a0a' : '#fff',
+          backgroundGradientTo: isDark ? '#0a0a0a' : '#fff',
+          color: () => isDark ? '#fff' : '#000',
+          labelColor: () => isDark ? '#aaa' : '#333',
           propsForDots: {
             r: '4',
             strokeWidth: '1',
-            stroke: '#fff',
+            stroke: isDark ? '#fff' : '#000',
           }
         }}
         bezier
@@ -91,7 +96,14 @@ export default function TrendGraphScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { backgroundColor: '#0a0a0a', padding: 20 },
-  title: { fontSize: 26, fontWeight: 'bold', color: '#00ffe0', marginBottom: 10 },
-  subtitle: { fontSize: 14, color: '#aaa', marginBottom: 20 },
+  container: { padding: 20 },
+  title: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    marginBottom: 10
+  },
+  subtitle: {
+    fontSize: 14,
+    marginBottom: 20
+  }
 });

@@ -1,63 +1,71 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, Image, useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
+import ConfettiCannon from 'react-native-confetti-cannon';
+import { Audio } from 'expo-av';
 
 const badgeData = [
   {
     id: 'habit_hero',
     title: 'Habit Hero',
     description: 'Completed all habits in one day',
-    icon: require('../assets/badges/7.png'),
+    icon: require('../../assets/badges/7.png'),
   },
   {
     id: 'first_time',
     title: 'First Completion',
     description: 'Completed a habit for the first time',
-    icon: require('../assets/badges/5.png'),
+    icon: require('../../assets/badges/5.png'),
   },
   {
     id: 'recovery',
     title: 'Comeback Ninja',
     description: 'Completed a habit you missed yesterday',
-    icon: require('../assets/badges/6.png'),
+    icon: require('../../assets/badges/6.png'),
   },
   {
     id: 'stick_streak',
     title: 'Stick Streak',
     description: 'Completed a habit 3 days in a row',
-    icon: require('../assets/badges/1.png'),
+    icon: require('../../assets/badges/1.png'),
   },
   {
     id: 'weekly_champion',
     title: 'Weekly Champion',
     description: 'Completed a habit 7 days in a row',
-    icon: require('../assets/badges/2.png'),
+    icon: require('../../assets/badges/2.png'),
   },
   {
     id: 'beast_mode',
     title: 'Beast Mode Activated!',
     description: '30-day streak on a single habit',
-    icon: require('../assets/badges/3.png'),
+    icon: require('../../assets/badges/3.png'),
   },
   {
     id: 'daily_master',
     title: 'Daily Master',
     description: 'Completed all habits today (again!)',
-    icon: require('../assets/badges/4.png'),
+    icon: require('../../assets/badges/4.png'),
   }
 ];
 
 export default function RewardsScreen() {
   const [unlockedBadges, setUnlockedBadges] = useState<string[]>([]);
+  const [newlyUnlocked, setNewlyUnlocked] = useState(false);
+  const scheme = useColorScheme();
+  const isDark = scheme === 'dark';
 
   useEffect(() => {
     const fetchBadges = async () => {
       try {
         const stored = await AsyncStorage.getItem('unlocked_badges');
         if (stored) {
-          setUnlockedBadges(JSON.parse(stored));
+          const parsed = JSON.parse(stored);
+          setUnlockedBadges(parsed);
+          setNewlyUnlocked(true);
+          playSound();
         }
       } catch (err) {
         console.error('Failed to load badges:', err);
@@ -66,23 +74,61 @@ export default function RewardsScreen() {
     fetchBadges();
   }, []);
 
+  const playSound = async () => {
+    try {
+      const { sound } = await Audio.Sound.createAsync(
+        require('../../assets/success.mp3')
+      );
+      await sound.playAsync();
+    } catch (error) {
+      console.error('Failed to play sound:', error);
+    }
+  };
+
+  const dynamic = {
+    background: isDark ? '#0a0a0a' : '#fff',
+    card: isDark ? '#1e1e1e' : '#f2f2f2',
+    title: isDark ? '#00ffe0' : '#007acc',
+    subtitle: isDark ? '#aaa' : '#666',
+    text: isDark ? '#fff' : '#111'
+  };
+
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.header}>🥷 Achievements</Text>
-      <Text style={styles.sub}>You earn badges for consistency, recovery, and beast mode.</Text>
+    <ScrollView contentContainerStyle={[styles.container, { backgroundColor: dynamic.background }]}>
+      <Text style={[styles.header, { color: dynamic.title }]}>🥷 Achievements</Text>
+      <Text style={[styles.sub, { color: dynamic.subtitle }]}>
+        You earn badges for consistency, recovery, and beast mode.
+      </Text>
+
+      {newlyUnlocked && (
+        <ConfettiCannon
+          count={80}
+          origin={{ x: 200, y: -20 }}
+          fadeOut
+          explosionSpeed={400}
+        />
+      )}
 
       <View style={styles.grid}>
         {badgeData.map((badge, index) => {
           const unlocked = unlockedBadges.includes(badge.id);
           return (
-            <Animated.View key={badge.id} entering={FadeInUp.delay(index * 100)} style={[styles.card, !unlocked && styles.locked]}>
+            <Animated.View
+              key={badge.id}
+              entering={FadeInUp.delay(index * 100)}
+              style={[
+                styles.card,
+                { backgroundColor: dynamic.card },
+                !unlocked && styles.locked
+              ]}
+            >
               {unlocked ? (
                 <Image source={badge.icon} style={styles.icon} />
               ) : (
                 <Ionicons name="lock-closed-outline" size={48} color="#666" />
               )}
-              <Text style={styles.title}>{badge.title}</Text>
-              <Text style={styles.desc}>{badge.description}</Text>
+              <Text style={[styles.title, { color: dynamic.title }]}>{badge.title}</Text>
+              <Text style={[styles.desc, { color: dynamic.subtitle }]}>{badge.description}</Text>
             </Animated.View>
           );
         })}
@@ -94,18 +140,15 @@ export default function RewardsScreen() {
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-    backgroundColor: '#0a0a0a',
     flexGrow: 1
   },
   header: {
     fontSize: 26,
     fontWeight: 'bold',
-    color: '#00ffe0',
     marginBottom: 10
   },
   sub: {
     fontSize: 16,
-    color: '#aaa',
     marginBottom: 30
   },
   grid: {
@@ -115,7 +158,6 @@ const styles = StyleSheet.create({
   },
   card: {
     width: '48%',
-    backgroundColor: '#1e1e1e',
     borderRadius: 14,
     padding: 16,
     alignItems: 'center',
@@ -130,14 +172,12 @@ const styles = StyleSheet.create({
     marginBottom: 10
   },
   title: {
-    color: '#00ffe0',
     fontWeight: 'bold',
     fontSize: 14,
     marginBottom: 4,
     textAlign: 'center'
   },
   desc: {
-    color: '#aaa',
     fontSize: 12,
     textAlign: 'center'
   }

@@ -12,25 +12,25 @@ export default function Explore() {
       title: 'New Habit Ideas',
       description: 'Explore curated routines to boost productivity, health, and mindfulness.',
       icon: 'bulb-outline',
-      action: () => router.push('/habit-tracker')
+      action: () => router.push('/habit-tracker'),
     },
     {
       title: 'Weekly Challenge',
       description: 'Join this week’s challenge: 10,000 steps a day. Track your streak!',
       icon: 'flame-outline',
-      action: () => alert('Challenge coming soon!')
+      action: () => alert('🔥 Challenge coming soon!'),
     },
     {
       title: 'Unlock Achievements',
       description: 'View your progress and earn badges for consistency.',
       icon: 'trophy-outline',
-      action: () => router.push('/rewards')
+      action: () => router.push('/rewards'),
     },
     {
       title: 'Guided Priming',
       description: 'Try a new 3-minute breathing session with motivational voiceovers.',
       icon: 'medkit-outline',
-      action: () => router.push('/daily-priming')
+      action: () => router.push('/daily-priming'),
     }
   ];
 
@@ -43,7 +43,7 @@ export default function Explore() {
         <Animated.View key={index} entering={FadeInUp.delay(index * 100)} style={styles.card}>
           <TouchableOpacity onPress={item.action}>
             <View style={styles.cardRow}>
-              <Ionicons name={item.icon} size={28} color="#00ffe0" style={{ marginRight: 15 }} />
+              <Ionicons name={item.icon as any} size={28} color="#00ffe0" style={styles.icon} />
               <View>
                 <Text style={styles.cardTitle}>{item.title}</Text>
                 <Text style={styles.cardDescription}>{item.description}</Text>
@@ -82,6 +82,9 @@ const styles = StyleSheet.create({
   cardRow: {
     flexDirection: 'row',
     alignItems: 'center'
+  },
+  icon: {
+    marginRight: 15
   },
   cardTitle: {
     color: '#00ffe0',

@@ -1,22 +1,31 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  useColorScheme
+} from 'react-native';
 import { Audio } from 'expo-av';
 
 const breakAudio = require('../assets/audio/breaktime.mp3');
 const workAudio = require('../assets/audio/backtowork.mp3');
 
 export default function PomodoroTimer() {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+
   const [secondsLeft, setSecondsLeft] = useState(25 * 60);
   const [isRunning, setIsRunning] = useState(false);
   const [mode, setMode] = useState<'focus' | 'break'>('focus');
-  const intervalRef = useRef(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (isRunning) {
       intervalRef.current = setInterval(() => {
         setSecondsLeft((prev) => {
-          if (prev === 1) {
-            clearInterval(intervalRef.current);
+          if (prev <= 1) {
+            clearInterval(intervalRef.current!);
             handleSessionEnd();
             return 0;
           }
@@ -25,7 +34,9 @@ export default function PomodoroTimer() {
       }, 1000);
     }
 
-    return () => clearInterval(intervalRef.current);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
   }, [isRunning]);
 
   const handleSessionEnd = async () => {
@@ -38,8 +49,8 @@ export default function PomodoroTimer() {
     try {
       await sound.loadAsync(nextMode === 'focus' ? workAudio : breakAudio);
       await sound.playAsync();
-    } catch (err) {
-      console.warn('Audio playback error:', err);
+    } catch (error) {
+      console.warn('⚠️ Audio playback error:', error);
     }
   };
 
@@ -48,11 +59,13 @@ export default function PomodoroTimer() {
     setSecondsLeft(mode === 'focus' ? 25 * 60 : 5 * 60);
   };
 
-  const formatTime = (secs) => {
+  const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60).toString().padStart(2, '0');
     const s = (secs % 60).toString().padStart(2, '0');
     return `${m}:${s}`;
   };
+
+  const styles = getStyles(isDark);
 
   return (
     <View style={styles.container}>
@@ -61,7 +74,7 @@ export default function PomodoroTimer() {
       <Text style={styles.timer}>{formatTime(secondsLeft)}</Text>
 
       <View style={styles.controls}>
-        <TouchableOpacity style={styles.button} onPress={() => setIsRunning(!isRunning)}>
+        <TouchableOpacity style={styles.button} onPress={() => setIsRunning((prev) => !prev)}>
           <Text style={styles.buttonText}>{isRunning ? 'Pause' : 'Start'}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.button} onPress={reset}>
@@ -72,12 +85,44 @@ export default function PomodoroTimer() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0a0a0a', padding: 20 },
-  header: { fontSize: 26, fontWeight: 'bold', color: '#00ffe0', marginBottom: 10 },
-  sub: { fontSize: 18, color: '#ccc', marginBottom: 30 },
-  timer: { fontSize: 64, fontWeight: 'bold', color: '#fff', marginBottom: 40 },
-  controls: { flexDirection: 'row' },
-  button: { backgroundColor: '#00ffe0', padding: 15, borderRadius: 10, marginHorizontal: 10 },
-  buttonText: { color: '#000', fontWeight: 'bold', fontSize: 16 }
-});
+const getStyles = (darkMode: boolean) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: darkMode ? '#0a0a0a' : '#f2f2f2',
+      padding: 20
+    },
+    header: {
+      fontSize: 26,
+      fontWeight: 'bold',
+      color: darkMode ? '#00ffe0' : '#0077cc',
+      marginBottom: 10
+    },
+    sub: {
+      fontSize: 18,
+      color: darkMode ? '#ccc' : '#555',
+      marginBottom: 30
+    },
+    timer: {
+      fontSize: 64,
+      fontWeight: 'bold',
+      color: darkMode ? '#fff' : '#000',
+      marginBottom: 40
+    },
+    controls: {
+      flexDirection: 'row'
+    },
+    button: {
+      backgroundColor: darkMode ? '#00ffe0' : '#0077cc',
+      padding: 15,
+      borderRadius: 10,
+      marginHorizontal: 10
+    },
+    buttonText: {
+      color: darkMode ? '#000' : '#fff',
+      fontWeight: 'bold',
+      fontSize: 16
+    }
+  });

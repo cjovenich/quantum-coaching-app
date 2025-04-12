@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, useColorScheme } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
+import { theme } from '../theme'; // adjust if your theme path is different
 
 export default function DailyPriming() {
   const router = useRouter();
+  const scheme = useColorScheme();
+  const activeTheme = theme[scheme || 'dark'];
+
   const [seconds, setSeconds] = useState(60);
   const [started, setStarted] = useState(false);
   const [quote, setQuote] = useState('');
@@ -24,14 +28,12 @@ export default function DailyPriming() {
   ];
 
   useEffect(() => {
-    // Load saved name from storage
     const loadName = async () => {
       const savedName = await SecureStore.getItemAsync('userName');
       if (savedName) setName(savedName);
     };
     loadName();
 
-    // Pick random quote
     setQuote(sampleQuotes[Math.floor(Math.random() * sampleQuotes.length)]);
   }, []);
 
@@ -43,30 +45,36 @@ export default function DailyPriming() {
     return () => clearTimeout(timer);
   }, [started, seconds]);
 
-  const startBreathing = () => {
-    setStarted(true);
-  };
+  const startBreathing = () => setStarted(true);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.greeting}>Good morning, {name} 👋</Text>
-      <Text style={styles.date}>Today is {day}, {date}</Text>
-      <Text style={styles.time}>It’s currently {time}</Text>
+    <View style={[styles.container, { backgroundColor: activeTheme.colors.background }]}>
+      <Text style={[styles.greeting, { color: activeTheme.colors.primary }]}>
+        Good morning, {name} 👋
+      </Text>
+      <Text style={[styles.date, { color: activeTheme.colors.text }]}>
+        Today is {day}, {date}
+      </Text>
+      <Text style={[styles.time, { color: activeTheme.colors.text }]}>
+        It’s currently {time}
+      </Text>
 
-      <Text style={styles.quote}>“{quote}”</Text>
+      <Text style={[styles.quote, { color: activeTheme.colors.text }]}>“{quote}”</Text>
 
       {started ? (
-        <Text style={styles.timer}>🧘‍♂️ {seconds} seconds of breathing...</Text>
+        <Text style={[styles.timer, { color: activeTheme.colors.primary }]}>
+          🧘‍♂️ {seconds} seconds of breathing...
+        </Text>
       ) : (
-        <TouchableOpacity style={styles.button} onPress={startBreathing}>
+        <TouchableOpacity style={[styles.button, { backgroundColor: activeTheme.colors.primary }]} onPress={startBreathing}>
           <Text style={styles.buttonText}>Start 1-Minute Breathing</Text>
         </TouchableOpacity>
       )}
 
       {seconds === 0 && (
         <TouchableOpacity
-          style={[styles.button, { marginTop: 20 }]}
-          onPress={() => router.push('/(tabs)')} // Replace this with /dashboard or /habit-tracker later
+          style={[styles.button, { backgroundColor: activeTheme.colors.primary, marginTop: 20 }]}
+          onPress={() => router.push('/(tabs)/habit-tracker')}
         >
           <Text style={styles.buttonText}>Continue to Next Habit</Text>
         </TouchableOpacity>
@@ -77,27 +85,27 @@ export default function DailyPriming() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1, padding: 30, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000'
+    flex: 1, padding: 30, justifyContent: 'center', alignItems: 'center'
   },
   greeting: {
-    fontSize: 24, color: '#00ffe0', fontWeight: 'bold', marginBottom: 10
+    fontSize: 24, fontWeight: 'bold', marginBottom: 10
   },
   date: {
-    fontSize: 16, color: '#ccc', marginBottom: 5
+    fontSize: 16, marginBottom: 5
   },
   time: {
-    fontSize: 16, color: '#ccc', marginBottom: 20
+    fontSize: 16, marginBottom: 20
   },
   quote: {
-    fontStyle: 'italic', color: '#eee', textAlign: 'center', marginBottom: 30, fontSize: 16
+    fontStyle: 'italic', textAlign: 'center', marginBottom: 30, fontSize: 16
   },
   timer: {
-    fontSize: 28, color: '#00ffe0', fontWeight: 'bold'
+    fontSize: 28, fontWeight: 'bold'
   },
   button: {
-    backgroundColor: '#00ffe0', padding: 15, borderRadius: 10
+    padding: 15, borderRadius: 10
   },
   buttonText: {
-    color: '#000', fontWeight: 'bold'
+    fontWeight: 'bold', color: '#000'
   }
 });

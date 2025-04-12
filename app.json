@@ -32,11 +32,12 @@
     },
     "extra": {
       "eas": {
-        "projectId": "YOUR_EAS_PROJECT_ID"  // Optional for EAS updates
+        "projectId": "quantum-coaching-7ccee"
       }
     },
     "experiments": {
       "newArchEnabled": true
-    }
+    },
+    "entryPoint": "./App.tsx"
   }
 }

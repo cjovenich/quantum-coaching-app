@@ -1,18 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CircularProgress from 'react-native-circular-progress-indicator';
+import { fetchUserData, saveUserData } from '../../sync';
 
 export default function Dashboard() {
-  const [habitStreaks, setHabitStreaks] = useState({});
-  const [calendarData, setCalendarData] = useState({});
+  const [habitStreaks, setHabitStreaks] = useState<Record<string, number>>({});
+  const [calendarData, setCalendarData] = useState<Record<string, any>>({});
   const [progress, setProgress] = useState({
     mind: 0,
     body: 0,
     focus: 0,
     consistency: 0,
   });
-  const [audioSeconds, setAudioSeconds] = useState(0);
+  const [audioSeconds, setAudioSeconds] = useState<number>(0);
 
   const mindHabits = ['Meditate', 'Journal', 'Read'];
   const bodyHabits = ['Drink Water', 'Stretch', 'Walk'];
@@ -20,17 +21,21 @@ export default function Dashboard() {
 
   useEffect(() => {
     const loadData = async () => {
-      const streaks = await AsyncStorage.getItem('habit_streaks');
-      const calendar = await AsyncStorage.getItem('calendar_log');
-      const audio = await AsyncStorage.getItem('audio_learning_log');
-      const today = new Date().toISOString().split('T')[0];
+      try {
+        const streaks = await AsyncStorage.getItem('habit_streaks');
+        const calendar = await AsyncStorage.getItem('calendar_log');
+        const audio = await AsyncStorage.getItem('audio_learning_log');
+        const today = new Date().toISOString().split('T')[0];
 
-      setHabitStreaks(streaks ? JSON.parse(streaks) : {});
-      setCalendarData(calendar ? JSON.parse(calendar) : {});
+        setHabitStreaks(streaks ? JSON.parse(streaks) : {});
+        setCalendarData(calendar ? JSON.parse(calendar) : {});
 
-      if (audio) {
-        const parsed = JSON.parse(audio);
-        setAudioSeconds(parsed[today] || 0);
+        if (audio) {
+          const parsed = JSON.parse(audio);
+          setAudioSeconds(parsed[today] || 0);
+        }
+      } catch (error) {
+        console.error("Error loading data:", error);
       }
     };
 
@@ -39,12 +44,12 @@ export default function Dashboard() {
 
   useEffect(() => {
     const totalDays = Object.keys(calendarData).length;
-    const consistency = Math.min((totalDays / 30) * 100, 100);
+    const consistency = Math.min((totalDays / 30) * 100, 100); // 30-day window
 
-    const streakAvg = (types) => {
+    const streakAvg = (types: string[]) => {
       const scores = types.map(h => habitStreaks[h] || 0);
-      const avg = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
-      return Math.min(avg * 3, 100); // scale 0–33 into ~0–100
+      const avg = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+      return Math.min(avg * 3, 100);
     };
 
     setProgress({
@@ -55,14 +60,14 @@ export default function Dashboard() {
     });
   }, [habitStreaks, calendarData]);
 
-  const categories = [
+  const categories = useMemo(() => [
     { label: 'Mind', value: progress.mind, color: '#00ffe0' },
     { label: 'Body', value: progress.body, color: '#ff6f00' },
     { label: 'Focus', value: progress.focus, color: '#7c4dff' },
-    { label: 'Consistency', value: progress.consistency, color: '#00c853' }
-  ];
+    { label: 'Consistency', value: progress.consistency, color: '#00c853' },
+  ], [progress]);
 
-  const audioPercent = Math.min((audioSeconds / 3600) * 100, 100); // goal = 1h
+  const audioPercent = Math.min((audioSeconds / 3600) * 100, 100); // 1 hour = 3600s
 
   const formatTime = (sec: number) => {
     const h = Math.floor(sec / 3600);
@@ -86,7 +91,7 @@ export default function Dashboard() {
               inActiveStrokeColor="#1e1e1e"
               inActiveStrokeWidth={10}
               activeStrokeWidth={12}
-              title={`${cat.label}`}
+              title={cat.label}
               titleColor="#ccc"
               titleStyle={{ fontWeight: 'bold', fontSize: 14 }}
               valueSuffix="%"

@@ -1,9 +1,14 @@
-import { Stack } from 'expo-router';
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { Slot } from 'expo-router';
+import { useAppTheme } from '../theme'; // ✅ Make sure theme.ts exports useAppTheme()
 
 export default function RootLayout() {
+  const theme = useAppTheme(); // Uses system color scheme (light/dark)
+
   return (
-    <Stack>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-    </Stack>
+    <NavigationContainer theme={theme}>
+      <Slot />
+    </NavigationContainer>
   );
 }

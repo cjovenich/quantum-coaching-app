@@ -1,14 +1,10 @@
+import 'react-native-reanimated'; // 👈 MUST come first
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { Slot } from 'expo-router';
-import { useAppTheme } from '../theme'; // ✅ Make sure theme.ts exports useAppTheme()
+import { useAppTheme } from '../theme'; // adjust path if needed
+import { Tabs } from 'expo-router';
 
-export default function RootLayout() {
-  const theme = useAppTheme(); // Uses system color scheme (light/dark)
+export default function Layout() {
+  const theme = useAppTheme();
 
-  return (
-    <NavigationContainer theme={theme}>
-      <Slot />
-    </NavigationContainer>
-  );
+  return <Tabs screenOptions={{ headerShown: false }} />;
 }

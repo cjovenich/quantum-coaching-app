@@ -4,7 +4,6 @@
     "slug": "quantum-coaching-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "scheme": "quantumcoaching",
     "platforms": ["ios", "android", "web"],
     "sdkVersion": "50.0.0",
     "userInterfaceStyle": "automatic",
@@ -14,14 +13,16 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
     "updates": {
       "fallbackToCacheTimeout": 0
     },
+    "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "us.ecopartner.quantumcoachingapp"
     },
     "android": {
+      "package": "us.ecopartner.quantumcoachingapp",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -30,14 +31,9 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "extra": {
-      "eas": {
-        "projectId": "quantum-coaching-7ccee"
-      }
-    },
-    "experiments": {
-      "newArchEnabled": true
-    },
-    "entryPoint": "./App.tsx"
+    "entryPoint": "expo-router/entry",
+    "plugins": [
+      "expo-router"
+    ]
   }
 }

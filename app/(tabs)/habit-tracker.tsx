@@ -1,12 +1,14 @@
 import React, { useEffect, useState, useCallback, useMemo, useReducer } from 'react';
-import debounce from 'lodash.debounce';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, FlatList, Alert, Modal } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Speech from 'expo-speech';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, FlatList, Alert, Modal, Animated, ScrollView } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { Audio } from 'expo-av';
+import * as Speech from 'expo-speech';
+import { Ionicons } from '@expo/vector-icons';
+import debounce from 'lodash.debounce';
 import { fetchUserData, saveUserData } from '../sync';
+import { suggestHabits } from '../utils/suggestHabits';
+import EmotionTracker from '../components/EmotionTracker';
+import MoodRing from '../components/MoodRing';
 
 const presetHabits = ['Drink Water', 'Meditate', 'Stretch', '🎧 Audio Learning (1h)'];
 
@@ -15,7 +17,7 @@ const initialState = {
   completedToday: {},
   habitStreaks: {},
   badges: [],
-  calendarData: {}
+  calendarData: {},
 };
 
 function reducer(state, action) {
@@ -35,6 +37,7 @@ export default function HabitTracker() {
   const [modalVisible, setModalVisible] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState('');
+  const [selectedEmotion, setSelectedEmotion] = useState(null);
   const todayKey = useMemo(() => new Date().toISOString().split('T')[0], []);
 
   useEffect(() => {
@@ -56,23 +59,23 @@ export default function HabitTracker() {
   useEffect(() => {
     const time = new Date().getHours();
     const lower = state.habits.map(h => h.toLowerCase());
-    const allSuggestions = [
+    const emotionSuggestions = suggestHabits(selectedEmotion);
+
+    const timeBasedSuggestions = [
       time < 11 && !lower.includes('make bed') && 'Make Bed',
       time < 12 && !lower.includes('plan day') && 'Plan Day',
       time >= 12 && time < 17 && !lower.includes('walk') && 'Afternoon Walk',
-      time >= 20 && !lower.includes('reflect') && 'Reflect on the Day',
+      time >= 20 && !lower.includes('reflect') && 'Reflect on Day',
       !lower.includes('gratitude') && 'Gratitude Journal',
       !lower.includes('sleep tracking') && 'Sleep Tracking'
-    ].filter(Boolean) as string[];
+    ].filter(Boolean);
 
-    setSuggestions(allSuggestions.slice(0, 3));
-  }, [state.habits]);
+    setSuggestions([...new Set([...emotionSuggestions, ...timeBasedSuggestions])].slice(0, 5));
+  }, [state.habits, selectedEmotion]);
 
   const playSuccessSound = async () => {
     try {
-      const { sound } = await Audio.Sound.createAsync(
-        require('../assets/success.mp3')
-      );
+      const { sound } = await Audio.Sound.createAsync(require('../assets/success.mp3'));
       await sound.playAsync();
     } catch (e) {
       console.warn('Audio error:', e);
@@ -170,8 +173,10 @@ export default function HabitTracker() {
   }, [state.calendarData]);
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <Text style={styles.title}>🧠 Habit Tracker</Text>
+      <EmotionTracker />
+      <MoodRing />
 
       <Calendar
         markedDates={markedDates}
@@ -226,26 +231,6 @@ export default function HabitTracker() {
         </TouchableOpacity>
       </View>
 
-      {/* 🔮 Suggestions */}
-      <View style={{ marginTop: 30 }}>
-        <Text style={{ color: '#aaa', fontSize: 16, marginBottom: 10 }}>
-          💡 Suggestions:
-        </Text>
-        {suggestions.map((habit, idx) => (
-          <TouchableOpacity
-            key={idx}
-            style={styles.suggestionCard}
-            onPress={() => {
-              dispatch({ type: 'SET_HABITS', payload: [...state.habits, habit] });
-              setSuggestions(suggestions.filter(s => s !== habit));
-            }}
-          >
-            <Ionicons name="add-circle-outline" size={20} color="#00ffe0" style={{ marginRight: 10 }} />
-            <Text style={{ color: '#fff' }}>{habit}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
       <Modal visible={modalVisible} transparent animationType="slide">
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
@@ -263,7 +248,7 @@ export default function HabitTracker() {
           </View>
         </View>
       </Modal>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -287,11 +272,6 @@ const styles = StyleSheet.create({
   },
   addButton: { backgroundColor: '#00ffe0', padding: 10, borderRadius: 10 },
   addText: { color: '#000', fontWeight: 'bold' },
-  suggestionCard: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#1e1e1e', padding: 12,
-    borderRadius: 10, marginBottom: 10
-  },
   modalContainer: {
     flex: 1, backgroundColor: 'rgba(0,0,0,0.8)',
     justifyContent: 'center', alignItems: 'center'

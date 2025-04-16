@@ -97,3 +97,28 @@ export const saveUserData = async (data: SyncData): Promise<void> => {
   const encrypted = await encryptData(data, key);
   await setDoc(ref, { payload: encrypted });
 };
+
+// sync.ts
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+export const fetchUserData = async () => {
+  const raw = await AsyncStorage.getItem('userData');
+  return raw ? JSON.parse(raw) : {};
+};
+
+export const saveUserData = async (data: any) => {
+  await AsyncStorage.setItem('userData', JSON.stringify(data));
+};
+
+export const saveEmotion = async (date: string, mood: string) => {
+  const key = `emotion:${date}`;
+  await AsyncStorage.setItem(key, mood);
+};
+
+export const getEmotionHistory = async (): Promise<Record<string, string>> => {
+  const keys = await AsyncStorage.getAllKeys();
+  const emotionKeys = keys.filter((k) => k.startsWith('emotion:'));
+  const entries = await AsyncStorage.multiGet(emotionKeys);
+  const data = Object.fromEntries(entries.map(([k, v]) => [k.split(':')[1], v]));
+  return data;
+};

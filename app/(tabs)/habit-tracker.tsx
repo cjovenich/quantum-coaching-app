@@ -5,10 +5,12 @@ import { Audio } from 'expo-av';
 import * as Speech from 'expo-speech';
 import { Ionicons } from '@expo/vector-icons';
 import debounce from 'lodash.debounce';
-import { fetchUserData, saveUserData } from '../sync';
-import { suggestHabits } from '../utils/suggestHabits';
-import EmotionTracker from '../components/EmotionTracker';
-import MoodRing from '../components/MoodRing';
+import { fetchUserData, saveUserData, getEmotionHistory } from '../sync';
+import { suggestHabits } from '@/utils/suggestHabits';
+import EmotionTracker from '../../components/EmotionTracker';
+import MoodRing from '../../components/MoodRing';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import { useUser } from '@/hooks/useUser';
 
 const presetHabits = ['Drink Water', 'Meditate', 'Stretch', '🎧 Audio Learning (1h)'];
 
@@ -38,7 +40,11 @@ export default function HabitTracker() {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedEmotion, setSelectedEmotion] = useState(null);
+  const [moodHistory, setMoodHistory] = useState([]);
   const todayKey = useMemo(() => new Date().toISOString().split('T')[0], []);
+
+  const { user } = useUser();
+  const db = getFirestore();
 
   useEffect(() => {
     const load = async () => {
@@ -57,21 +63,33 @@ export default function HabitTracker() {
   }, []);
 
   useEffect(() => {
-    const time = new Date().getHours();
-    const lower = state.habits.map(h => h.toLowerCase());
-    const emotionSuggestions = suggestHabits(selectedEmotion);
+    const loadMoodData = async () => {
+      const raw = await getEmotionHistory();
+      const values = Object.entries(raw).map(([date, mood]) => ({ date, mood }));
+      setMoodHistory(values);
+    };
+    loadMoodData();
+  }, []);
 
-    const timeBasedSuggestions = [
-      time < 11 && !lower.includes('make bed') && 'Make Bed',
-      time < 12 && !lower.includes('plan day') && 'Plan Day',
-      time >= 12 && time < 17 && !lower.includes('walk') && 'Afternoon Walk',
-      time >= 20 && !lower.includes('reflect') && 'Reflect on Day',
-      !lower.includes('gratitude') && 'Gratitude Journal',
-      !lower.includes('sleep tracking') && 'Sleep Tracking'
-    ].filter(Boolean);
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      if (!user?.uid) return;
+      const streakRef = doc(db, 'users', user.uid, 'meta', 'habitStreaks');
+      const completedRef = doc(db, 'users', user.uid, 'meta', 'completedHabits');
+      const [streakSnap, completedSnap] = await Promise.all([
+        getDoc(streakRef),
+        getDoc(completedRef),
+      ]);
 
-    setSuggestions([...new Set([...emotionSuggestions, ...timeBasedSuggestions])].slice(0, 5));
-  }, [state.habits, selectedEmotion]);
+      const streaks = streakSnap.exists() ? streakSnap.data() : {};
+      const completed = completedSnap.exists() ? completedSnap.data()?.[todayKey] || [] : [];
+
+      const suggested = suggestHabits('morning', streaks, completed);
+      setSuggestions(suggested);
+    };
+
+    fetchSuggestions();
+  }, [user?.uid]);
 
   const playSuccessSound = async () => {
     try {
@@ -176,7 +194,7 @@ export default function HabitTracker() {
     <ScrollView style={styles.container}>
       <Text style={styles.title}>🧠 Habit Tracker</Text>
       <EmotionTracker />
-      <MoodRing />
+      <MoodRing emotions={moodHistory} />
 
       <Calendar
         markedDates={markedDates}

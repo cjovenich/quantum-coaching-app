@@ -1,3 +1,10 @@
+# ✅ Add CocoaPods and Expo sources
+source 'https://cdn.cocoapods.org/'
+source 'https://github.com/expo/expo.git'
+
+use_modular_headers!
+
+# ✅ Load Expo + React Native pod setup scripts
 require File.join(File.dirname(`node --print "require.resolve('expo/package.json')"`), "scripts/autolinking")
 require File.join(File.dirname(`node --print "require.resolve('react-native/package.json')"`), "scripts/react_native_pods")
 
@@ -48,11 +55,15 @@ target 'QuantumCoaching' do
       mac_catalyst_enabled: false
     )
 
-    # ✅ Force iOS 15.0 and disable code signing for all pods
+    minimum_ios_version = '15.0'
+
+    # ✅ Force iOS 15.0 and modern C++ for every target
     installer.pods_project.targets.each do |target|
       target.build_configurations.each do |config|
-        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = minimum_ios_version
         config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
+        config.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++20'
+        config.build_settings['CLANG_CXX_LIBRARY'] = 'libc++'
       end
     end
 

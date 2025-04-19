@@ -1,10 +1,16 @@
-import 'react-native-reanimated'; // 👈 MUST come first
-import React from 'react';
-import { useAppTheme } from '../theme'; // adjust path if needed
-import { Tabs } from 'expo-router';
+// app/_layout.tsx
+import { Stack } from 'expo-router';
+import { useAppTheme } from '../theme';
 
 export default function Layout() {
   const theme = useAppTheme();
 
-  return <Tabs screenOptions={{ headerShown: false }} />;
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: theme.colors.background },
+      }}
+    />
+  );
 }

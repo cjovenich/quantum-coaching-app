@@ -10,7 +10,6 @@ const EmotionTracker = () => {
   const [calendarEmotions, setCalendarEmotions] = useState({});
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
-  // Load stored emotion log on mount
   useEffect(() => {
     const loadEmotions = async () => {
       try {
@@ -25,7 +24,6 @@ const EmotionTracker = () => {
     loadEmotions();
   }, []);
 
-  // Animate icon on change
   useEffect(() => {
     if (selectedEmotion) {
       Animated.sequence([
@@ -62,7 +60,7 @@ const EmotionTracker = () => {
             color: 'white',
           },
         },
-      }
+      },
     };
 
     setCalendarEmotions(updated);

@@ -1,4 +1,5 @@
 // emotions.ts
+import { emotions } from '../data/emotions';
 
 export const emotions = [
     { name: 'Happiness', icon: require('../assets/emotions/Happiness.png') },

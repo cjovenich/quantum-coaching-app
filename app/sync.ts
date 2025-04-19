@@ -1,6 +1,7 @@
 // app/sync.ts
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { initAuth, db } from './firebase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -96,18 +97,6 @@ export const saveUserData = async (data: SyncData): Promise<void> => {
   const key = await deriveEncryptionKey(SECRET_PASSWORD, SALT);
   const encrypted = await encryptData(data, key);
   await setDoc(ref, { payload: encrypted });
-};
-
-// sync.ts
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-export const fetchUserData = async () => {
-  const raw = await AsyncStorage.getItem('userData');
-  return raw ? JSON.parse(raw) : {};
-};
-
-export const saveUserData = async (data: any) => {
-  await AsyncStorage.setItem('userData', JSON.stringify(data));
 };
 
 export const saveEmotion = async (date: string, mood: string) => {
